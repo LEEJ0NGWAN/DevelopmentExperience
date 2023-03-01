@@ -9,11 +9,15 @@ ServerRequest 객체의 (내부 exchange의) attributes에 리퀘스트 바디�
 
 ServerRequest를 인자로 다루는 웹플럭스 내부 곳에서든 자유롭게 사용 가능합니다
 
+```java
+final String body = (String) serverRequest.attribute("cachedRequestBody").orElse("");
+```
+
 ### RequestBroker
 
 요청 리퀘스트를 외부로 전달하는 경우
 
-```
+```java
 @Component
 @RequiredArgsConstructor
 public class RequestBroker {
@@ -39,7 +43,7 @@ public class RequestBroker {
 
 요청 리퀘스트의 정보를 로깅하는 핸들러
 
-```
+```java
 @Component
 @RequiredArgsConstructor
 public class RequestLogger {
