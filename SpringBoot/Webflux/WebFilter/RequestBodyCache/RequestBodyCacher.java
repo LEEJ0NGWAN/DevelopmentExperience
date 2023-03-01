@@ -14,7 +14,8 @@ import reactor.core.publisher.Mono;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-@Order @Component @RequiredArgsConstructor public class RequestBodyCacher implements WebFilter {
+@Order @Component @RequiredArgsConstructor
+public class RequestBodyCacher implements WebFilter {
 
     private static final byte[] EMPTY_BYTES = {};
     public static final String CACHED_REQUEST_BODY = "cachedRequestBody";
