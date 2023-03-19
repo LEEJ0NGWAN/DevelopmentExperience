@@ -12,7 +12,10 @@ import javax.validation.Payload;
 
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 
-@Documented @Constraint(validatedBy =  DateValidator.class) @Target({ ElementType.METHOD, ElementType.FIELD }) @Retention(RetentionPolicy.RUNTIME) public @interface Date {
+@Documented @Constraint(validatedBy =  DateValidator.class)
+@Target({ ElementType.METHOD, ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Date {
 
     String message() default "must be a date - yyyyMMdd";
     Class<?>[] groups() default {};
