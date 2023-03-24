@@ -40,3 +40,19 @@ private String updatedAt;
   - must be a date - yyyyMMdd
   - must be greater than or equal to {min}
   - must be less than or equal to {max}
+
+### @Number
+정수의 숫자가 minSize,maxSize 사이의 길이인지 검증하거나, minValue,maxValue 값이 있을때 해당 허용 범위의 값인지 검증하는 애노테이션입니다
+
+- 사용 예시
+
+```java
+@Number // default min: 1, max: 50
+private String serial;
+
+@Number(maxSize = 300)
+private String height;
+
+@Number(maxValue = "500000") // minSize: 1, maxSize: 6, maxValue: 500000
+private String weight;
+```
