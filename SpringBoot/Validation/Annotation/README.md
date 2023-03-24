@@ -56,3 +56,11 @@ private String height;
 @Number(maxValue = "500000") // minSize: 1, maxSize: 6, maxValue: 500000
 private String weight;
 ```
+
+- 에러메세지
+  - must not be blank
+  - must be a number
+  - size must be {size} (minSize == maxSize 경우)
+  - size must be between {minSize} and {maxSize}
+  - must be greater than or equal to {minValue}
+  - must be less than or equal to {maxValue}
