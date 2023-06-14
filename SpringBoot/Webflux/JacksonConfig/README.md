@@ -6,7 +6,7 @@
 
 Objectmapper빈을 스프링 컨테이너로부터 주입받도록 설정해줍니다
 
-```
+```java
 @Configuration
 @RequiredArgsConstructor
 public class WebFluxConfig implements WebFluxConfigurer {
@@ -29,7 +29,7 @@ public class WebFluxConfig implements WebFluxConfigurer {
 
 직접 Encode/Decoder, WebFluxConfigurer 상속 익명 객체를 생성하고, 해당 인코더 디코더빈을 익명객체에 등록할 수 있도록 수기로 구성해줍니다
 
-```
+```java
 @Configuration
 public class Config {
   
