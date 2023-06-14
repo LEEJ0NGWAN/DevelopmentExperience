@@ -1,10 +1,61 @@
-# RequestBodyCache
+# RequestBodyCacher
 Webflux는 비동기 플로우로써 request body를 한번 emit (bodyToMono or bodyToFlux)하고 난 후에는 재사용 할 수 없습니다
 
 레거시와 연계 혹은 프록시 응용, 히스토리 로깅 등 다양한 방면에서 리퀘스트 바디를 여러번 재사용 하기 위해 캐싱을 구현합니다
 
 ServerRequest에 대해,
-구현 필터에서 먼저 리퀘스트 바디를 바이트 캐시로 보관하고 여러번 리퀘스트 바디 호출이 가능하도록 설정합니다
+리퀘스트 바디를 바이트 캐시로 보관하고 여러번 리퀘스트 바디 호출이 가능하도록 하는 웹플럭스 필터입니다
+
+```java
+@Component
+public class RequestBodyCacher implements WebFilter {
+
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        return DataBufferUtils
+        .join(exchange.getRequest().getBody())
+        .map(databuffer -> {
+
+            final byte[] bytes = new byte[databuffer.readableByteCount()];
+
+            DataBufferUtils.release(databuffer.read(bytes));
+
+            return bytes;
+        })
+        .defaultIfEmpty(EMPTY_BYTES)
+        .doOnNext(bytes -> System.out.println(new String(bytes)))
+        .flatMap(bytes -> {
+
+            final RequestBodyDecorator decorator = new RequestBodyDecorator(exchange, bytes);
+
+            return chain.filter(exchange.mutate().request(decorator).build());
+        });
+    }
+}
+
+class RequestBodyDecorator extends ServerHttpRequestDecorator {
+
+    private final byte[] bytes;
+    private final ServerWebExchange exchange;
+
+    public RequestBodyDecorator(ServerWebExchange exchange, byte[] bytes) {
+
+        super(exchange.getRequest());
+        this.bytes = bytes;
+        this.exchange = exchange;
+    }
+
+    @Override
+    public Flux<DataBuffer> getBody() {
+
+        return bytes==null||bytes.length==0?
+        Flux.empty(): Flux.just(exchange.getResponse().bufferFactory().wrap(bytes));
+    }
+}
+```
 
 ## usecase
 
@@ -22,10 +73,6 @@ public class PingPongHandler {
     }
 }
 ```
-
-### RequestBroker
-
-요청 리퀘스트를 외부로 전달하는 경우
 
 ```java
 @Component
@@ -52,20 +99,67 @@ public class RequestBroker {
     }
 ```
 
-### RequestLogger
+# RequestLogger
 
-요청 리퀘스트의 정보를 히스토리 테이블에 레거시 동기 방식으로 save 하는 경우
+리퀘스트 바디 캐싱 필터의 응용으로,
+요청 리퀘스트의 정보를 히스토리 테이블에 레거시 동기 방식으로 save 하는 필터를 구현합니다
 
 ```java
 ...
-request
-    .bodyToMono(String.class)
-    .doOnNext(body -> Mono.fromRunnable(
-        () -> {
+@Component
+public class RequestBodyCacher implements WebFilter {
 
-            // Block IO for Sync DB logging
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        return DataBufferUtils
+        .join(exchange.getRequest().getBody())
+        .map(databuffer -> {
+
+            final byte[] bytes = new byte[databuffer.readableByteCount()];
+
+            DataBufferUtils.release(databuffer.read(bytes));
+
+            return bytes;
         })
-        .subscribeOn(Schedulers.boundedElastic())
-        .subscribe())
+        .defaultIfEmpty(EMPTY_BYTES)
+        .doOnNext(
+            bytes -> Mono.fromRunnable(
+                () -> {
+
+                    // ... not r2dbc and blocking db logging for request data
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe())
+        .flatMap(bytes -> {
+
+            final RequestBodyDecorator decorator = new RequestBodyDecorator(exchange, bytes);
+
+            return chain.filter(exchange.mutate().request(decorator).build());
+        });
+    }
+}
+
+class RequestBodyDecorator extends ServerHttpRequestDecorator {
+
+    private final byte[] bytes;
+    private final ServerWebExchange exchange;
+
+    public RequestBodyDecorator(ServerWebExchange exchange, byte[] bytes) {
+
+        super(exchange.getRequest());
+        this.bytes = bytes;
+        this.exchange = exchange;
+    }
+
+    @Override
+    public Flux<DataBuffer> getBody() {
+
+        return bytes==null||bytes.length==0?
+        Flux.empty(): Flux.just(exchange.getResponse().bufferFactory().wrap(bytes));
+    }
+}
 ...
 ```
