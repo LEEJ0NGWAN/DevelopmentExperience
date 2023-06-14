@@ -26,7 +26,6 @@ public class RequestBodyCacher implements WebFilter {
             return bytes;
         })
         .defaultIfEmpty(EMPTY_BYTES)
-        .doOnNext(bytes -> System.out.println(new String(bytes)))
         .flatMap(bytes -> {
 
             final RequestBodyDecorator decorator = new RequestBodyDecorator(exchange, bytes);
