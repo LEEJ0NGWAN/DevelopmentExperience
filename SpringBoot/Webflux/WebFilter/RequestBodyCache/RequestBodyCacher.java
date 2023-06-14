@@ -1,55 +1,59 @@
-import java.util.function.Function;
-
-import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import lombok.RequiredArgsConstructor;
-
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-@Order @Component @RequiredArgsConstructor
+@Component
 public class RequestBodyCacher implements WebFilter {
 
-    private static final byte[] EMPTY_BYTES = {};
-    public static final String CACHED_REQUEST_BODY = "cachedRequestBody";
+    private static final byte[] EMPTY_BYTES = new byte[0];
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-        return cacheRequestBody(exchange, chain::filter);
-    }
-
-    private static Mono<Void> cacheRequestBody(
-        ServerWebExchange exchange, Function<ServerWebExchange, Mono<Void>> function) {
-
         return DataBufferUtils
         .join(exchange.getRequest().getBody())
-        .defaultIfEmpty(exchange.getResponse().bufferFactory().wrap(EMPTY_BYTES))
-        .map(dataBuffer -> decorate(exchange, dataBuffer))
-        .flatMap(function);
+        .map(databuffer -> {
+
+            final byte[] bytes = new byte[databuffer.readableByteCount()];
+
+            DataBufferUtils.release(databuffer.read(bytes));
+
+            return bytes;
+        })
+        .defaultIfEmpty(EMPTY_BYTES)
+        .doOnNext(bytes -> System.out.println(new String(bytes)))
+        .flatMap(bytes -> {
+
+            final RequestBodyDecorator decorator = new RequestBodyDecorator(exchange, bytes);
+
+            return chain.filter(exchange.mutate().request(decorator).build());
+        });
+    }
+}
+
+class RequestBodyDecorator extends ServerHttpRequestDecorator {
+
+    private final byte[] bytes;
+    private final ServerWebExchange exchange;
+
+    public RequestBodyDecorator(ServerWebExchange exchange, byte[] bytes) {
+
+        super(exchange.getRequest());
+        this.bytes = bytes;
+        this.exchange = exchange;
     }
 
-    private static ServerWebExchange decorate(
-        ServerWebExchange exchange, DataBuffer dataBuffer) {
+    @Override
+    public Flux<DataBuffer> getBody() {
 
-        if (dataBuffer.readableByteCount() > 0) {
-
-            final byte[] bytes = new byte[dataBuffer.readableByteCount()];
-
-            DataBufferUtils.release(dataBuffer.read(bytes));
-
-            exchange
-            .getAttributes()
-            .put(CACHED_REQUEST_BODY, new String(bytes, UTF_8));
-        }
-
-        return exchange;
+        return bytes==null||bytes.length==0?
+        Flux.empty(): Flux.just(exchange.getResponse().bufferFactory().wrap(bytes));
     }
 }
