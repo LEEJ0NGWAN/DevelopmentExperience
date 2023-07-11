@@ -1,5 +1,5 @@
 
-[돌아가기](https://github.com/LEEJ0NGWAN/DevelopmentExperience/tree/master)
+[돌아가기](https://github.com/LEEJ0NGWAN/DevelopmentExperience)
 
 # NullToEmptyValueJacksonConfig
 
