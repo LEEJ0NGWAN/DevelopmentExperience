@@ -1,6 +1,6 @@
 [돌아가기](https://github.com/LEEJ0NGWAN/DevelopmentExperience)
 
-# RequestBodyCacher
+# ResponseBodyCacher
 
 Webflux 에서는 한번 Response body를 emit 한 후 데이터를 재사용할 수 없습니다.
 
