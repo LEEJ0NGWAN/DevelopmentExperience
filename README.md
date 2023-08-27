@@ -2,6 +2,8 @@
 백엔드 개발자로써 개발하며 쌓은 경험을 정리했습니다.
 
 ### Spring Boot
+
+- [Dynamic Request JSON Deserialize](https://github.com/LEEJ0NGWAN/DevelopmentExperience/tree/master/SpringBoot/RequestJsonHandling/DynamicJSONDeserialize)
 - [Jackson Null to Empty values](https://github.com/LEEJ0NGWAN/DevelopmentExperience/tree/master/SpringBoot/ResponseJSONHandling/NullToEmptyValues)
 - [VO Validation custom Annotations](https://github.com/LEEJ0NGWAN/DevelopmentExperience/tree/master/SpringBoot/Validation/Annotation)
 - [Webflux Jackson Custom Config](https://github.com/LEEJ0NGWAN/DevelopmentExperience/tree/master/SpringBoot/Webflux/JacksonConfig)
