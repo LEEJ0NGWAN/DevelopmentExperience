@@ -1,0 +1,7 @@
+user:
+  dynamic-json-property:
+    family_name: lastName
+    surname: lastName
+    given_name: firstName
+    mobile_phone: phoneNumber
+    cell_phone: phoneNumber
